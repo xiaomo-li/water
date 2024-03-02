@@ -1,0 +1,90 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 100%;
+  background: #4d4d4d;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4d4d4d;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+::-webkit-scrollbar-track-piece {
+  visibility: hidden;
+}
+
+::-webkit-scrollbar-corner {
+  border-radius: 10px;
+}
+li {
+  list-style: none;
+}
+@media screen and (orientation: portrait) and (max-width: 320px) {
+  html {
+    font-size: 30px !important;
+  }
+}
+
+@media screen and (orientation: portrait) and (min-width: 321px) and (max-width: 414px) {
+  html {
+    font-size: 37.5px !important;
+  }
+}
+
+@media screen and (orientation: portrait) and (min-width: 415px) and (max-width: 768px) {
+  html {
+    font-size: 45px !important;
+  }
+}
+
+@media screen and (orientation: portrait) and (min-width: 769px) and (max-width: 1024px) {
+  html {
+    font-size: 58.92px !important;
+  }
+}
+
+@media screen and (orientation: portrait) and (min-width: 1025px) {
+  html {
+    font-size: 58.92px !important;
+  }
+}
+
+@media screen and (orientation: landscape) and (max-width: 568px) {
+  html {
+    font-size: 30px !important;
+  }
+}
+
+@media screen and (orientation: landscape) and (min-width: 667px) and (max-width: 812px) {
+  html {
+    font-size: 37.5px !important;
+  }
+}
+
+@media screen and (orientation: landscape) and (min-width: 813px) and (max-width: 1024px) {
+  html {
+    font-size: 58.92px !important;
+  }
+}
+
+@media screen and (orientation: landscape) and (min-width: 1025px) {
+  html {
+    font-size: 75px !important;
+  }
+}

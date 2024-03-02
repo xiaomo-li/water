@@ -1,10 +1,9 @@
 <template>
-  <WaterPage msg="Welcome to Your Vue.js App" />
+  <WaterPage />
 </template>
 
 <script>
-import WaterPage from "./components/WaterPage.vue";
-
+import WaterPage from "./components/WaterPage2.vue";
 export default {
   name: "App",
   components: {
