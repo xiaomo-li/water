@@ -1,6 +1,22 @@
 <template>
   <div class="app">
-    <div ref="waterRef" @click="onDocumentMouseDown"></div>
+    <div ref="waterRef" @click="showCamera"></div>
+    <div class="loading" v-if="isLoading">
+      <div class="sk-circle">
+        <div class="sk-circle1 sk-child"></div>
+        <div class="sk-circle2 sk-child"></div>
+        <div class="sk-circle3 sk-child"></div>
+        <div class="sk-circle4 sk-child"></div>
+        <div class="sk-circle5 sk-child"></div>
+        <div class="sk-circle6 sk-child"></div>
+        <div class="sk-circle7 sk-child"></div>
+        <div class="sk-circle8 sk-child"></div>
+        <div class="sk-circle9 sk-child"></div>
+        <div class="sk-circle10 sk-child"></div>
+        <div class="sk-circle11 sk-child"></div>
+        <div class="sk-circle12 sk-child"></div>
+      </div>
+    </div>
     <!-- 功能按钮 -->
     <div class="menu-part">
       <ul>
@@ -17,7 +33,7 @@
           <img src="../assets/icon2.png" alt="" />
           <span>视图</span>
         </li>
-        <li>
+        <li @click="handleEffect">
           <img src="../assets/icon3.png" alt="" />
           <span>效果</span>
         </li>
@@ -141,94 +157,111 @@ import * as THREE from "three";
 import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 // import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
-import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+// import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import * as TWEEN from "@tweenjs/tween.js";
 import "../style/style.css";
 
 const isMobile = ref(false);
+const isLoading = ref(true);
 const showAreaList = ref(false);
 const showColorList = ref(false);
+
 // 当前选择的部件
 const currentArea = ref("水壶盖");
 const currentAreaIndex = ref(null);
 // 部位
 const areaList = [
   {
-    areaName: "水壶盖",
+    areaName: "壶体", // 对称_1
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 2500, y: 1000, z: 0 },
     material: null,
   },
   {
-    areaName: "壶嘴内部",
+    areaName: "水壶盖", // Retopo_布尔_4_1
     colorName: "默认颜色",
     color: "#fff",
+    // coords: { x: 770, y: 1500, z: -390 },
+    coords: { x: 2500, y: 1000, z: 0 },
     material: null,
   },
   {
-    areaName: "底座",
+    areaName: "底座", // 挤压
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 2500, y: 1000, z: 100 },
     material: null,
   },
   {
-    areaName: "底部装饰",
+    areaName: "把手外侧", // Retopo_布尔_4
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 1100, y: 830, z: -2200 },
+    material: null,
+  },
+
+  {
+    areaName: "把手内侧", // Retopo_细分曲面_3
+    colorName: "默认颜色",
+    color: "#fff",
+    coords: { x: 1100, y: 830, z: -2200 },
     material: null,
   },
   {
-    areaName: "内胆底部",
+    areaName: "按钮", // Retopo_布尔_4_1_1
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 1100, y: 830, z: -2200 },
     material: null,
   },
   {
-    areaName: "内胆",
+    areaName: "灯眼", // 对称_3
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 1800, y: 300, z: -30 },
     material: null,
   },
   {
-    areaName: "水壶内部",
+    areaName: "壶嘴内部", // 对称
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 400, y: 1641, z: 500 },
     material: null,
   },
   {
-    areaName: "按钮外侧",
+    areaName: "底部装饰", // 克隆
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 1000, y: -1500, z: 1000 },
     material: null,
   },
   {
-    areaName: "把手",
+    areaName: "内胆", // 圆柱体_1
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 1000, y: -1500, z: 1000 },
     material: null,
   },
   {
-    areaName: "按钮",
+    areaName: "壶体内侧", // 布尔
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 2500, y: 1000, z: 100 },
     material: null,
   },
   {
-    areaName: "壶体内侧",
+    areaName: "内芯", // 空白_1
     colorName: "默认颜色",
     color: "#fff",
+    coords: { x: 2500, y: 1000, z: 100 },
     material: null,
   },
   {
-    areaName: "壶体",
+    areaName: "水壶内部", // 空白
     colorName: "默认颜色",
     color: "#fff",
-    material: null,
-  },
-  {
-    areaName: "灯眼",
-    colorName: "默认颜色",
-    color: "#fff",
+    coords: { x: 2500, y: 1000, z: 100 },
     material: null,
   },
 ];
@@ -295,29 +328,6 @@ const colorList = [
     color: "#f7f7f7",
   },
 ];
-// 切换颜色
-function switchColor(index, colorInfo) {
-  areaList[index].color = colorInfo.color;
-  areaList[index].colorName = colorInfo.name;
-  areaList[index].material.color.set(colorInfo.color);
-}
-
-// 选择区域
-function handleSelectArea(info, index) {
-  currentArea.value = info;
-  currentAreaIndex.value = index;
-  showAreaList.value = false;
-  showColorList.value = true;
-}
-for (let i of areaList) {
-  i.material = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    metalness: 0.9, // 金属度
-    roughness: 1, // 粗糙度
-    clearcoat: 0.3, // 轻漆
-    clearcoatRoughness: 0.4, // 轻漆粗糙度
-  });
-}
 
 let scene;
 let camera;
@@ -327,6 +337,46 @@ let frameId = 0;
 let controls;
 const controlsRef = ref(null);
 let tween;
+// 切换颜色
+function switchColor(index, colorInfo) {
+  areaList[index].color = colorInfo.color;
+  areaList[index].colorName = colorInfo.name;
+  areaList[index].material.color.set(colorInfo.color);
+}
+
+// 选择区域
+function handleSelectArea(info, index) {
+  controls.autoRotate = false;
+
+  currentArea.value = info;
+  currentAreaIndex.value = index;
+  showAreaList.value = false;
+  showColorList.value = true;
+
+  let coords = areaList[index].coords;
+  tween = new TWEEN.Tween(camera.position)
+    .to(
+      {
+        x: coords.x ? coords.x : camera.position.x,
+        y: coords.y,
+        z: coords.z,
+      },
+      2500
+    )
+    .easing(TWEEN.Easing.Quadratic.InOut)
+    .start();
+  // camera.position.set(coords.x, coords.y, coords.z);
+}
+for (let i of areaList) {
+  i.material = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    metalness: 0.8, // 金属度
+    roughness: 0.9, // 粗糙度
+    clearcoat: 0.3, // 轻漆
+    clearcoatRoughness: 0.4, // 轻漆粗糙度
+  });
+}
+
 function init() {
   if (waterRef.value) {
     scene = new THREE.Scene();
@@ -335,7 +385,7 @@ function init() {
       45,
       window.innerWidth / window.innerHeight,
       1,
-      5000
+      4000
     );
     camera.position.set(2500, 1000, 100);
     renderer = new THREE.WebGLRenderer({
@@ -343,107 +393,93 @@ function init() {
       preserveDrawingBuffer: true,
     });
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // 默认的阴影类型
+    renderer.setClearColor("#224141");
     renderer.setSize(window.innerWidth, window.innerHeight);
     waterRef.value.append(renderer.domElement);
 
     // 创建灯光
     // 环境光
-    const ambientLight = new THREE.AmbientLight(0xffffff, 5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2);
     scene.add(ambientLight);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
+    hemiLight.position.set(1000, 220, 0);
+    scene.add(hemiLight);
 
-    const light1 = new THREE.DirectionalLight(0xffffff, 0.5);
-    light1.position.set(0, 0, 10);
+    const light1 = new THREE.DirectionalLight(0xffffff, 0.7);
+    light1.position.set(0, 0, 100); // 壶嘴
     scene.add(light1);
-    const light2 = new THREE.DirectionalLight(0xffffff, 5);
-    light2.position.set(10, 1, -5);
+    const light2 = new THREE.DirectionalLight(0xffffff, 0.7);
+    light2.position.set(0, 0, -100); // 壶把
     scene.add(light2);
-    // const light3 = new THREE.DirectionalLight(0xffff00, 1);
-    // light3.position.set(80, 300, 100);
-    // scene.add(light3);
-    const light4 = new THREE.DirectionalLight(0xffffff, 4);
-    light4.position.set(-10, 0, 5);
+
+    const light3 = new THREE.DirectionalLight(0xffffff, 0.9);
+    light3.position.set(200, 0, 40); // 正面
+    scene.add(light3);
+
+    const light4 = new THREE.DirectionalLight(0xffffff, 0.9);
+    light4.position.set(-200, 200, 40); // 背面
     scene.add(light4);
-    const light5 = new THREE.DirectionalLight(0xffffff, 1);
-    light5.position.set(0, 10, 0);
+
+    const light5 = new THREE.DirectionalLight(0xffffff, 1.5);
+    light5.position.set(0, 100, 0); // 顶光
     scene.add(light5);
+
     const light6 = new THREE.DirectionalLight(0xffffff, 0.3);
-    light6.position.set(5, 10, 0);
+    light6.position.set(1000, 100, 1000); // 壶嘴
     scene.add(light6);
     const light7 = new THREE.DirectionalLight(0xffffff, 0.3);
-    light7.position.set(0, 10, 5);
+    light7.position.set(-1000, -100, -1000); // 壶把
     scene.add(light7);
-    const light8 = new THREE.DirectionalLight(0xffffff, 0.3);
-    light7.position.set(0, 10, -5);
+    const light8 = new THREE.DirectionalLight(0xffffff, 3);
+    light8.position.set(-500, 0, 0); // 背面+ 底部
     scene.add(light8);
-    const light9 = new THREE.DirectionalLight(0xffffff, 0.3);
-    light9.position.set(-5, 10, 0);
+    const light9 = new THREE.DirectionalLight(0xffffff, 3);
+    light9.position.set(500, 200, 0); // 正面+顶部
     scene.add(light9);
+
     // 引入并渲染模型
     const loader = new FBXLoader();
-    loader.load("/1.fbx", function (object) {
-      object.castShadow = true;
+    loader.load(`./model/1.fbx`, function (object) {
+      isLoading.value = false;
       scene.add(object);
-      // console.log(object);
+      object.castShadow = true;
       object.traverse(function (child) {
+        child.castShadow = true;
+        child.receiveShadow = true;
         if (child.isMesh) {
           // 壶盖
-          if (child.name == "Retopo_布尔_4_1") {
+          if (child.name == "对称_1") {
             child.material = areaList[0].material;
-          } else if (child.name == "对称") {
+          } else if (child.name == "Retopo_布尔_4_1") {
             // 壶把外侧
             child.material = areaList[1].material;
           } else if (child.name == "挤压") {
             child.material = areaList[2].material;
-          } else if (child.name == "克隆") {
-            child.material = areaList[3].material;
-          } else if (child.name == "圆柱体_1") {
-            child.material = areaList[4].material;
-          } else if (child.name == "空白_1") {
-            child.material = areaList[5].material;
-          } else if (child.name == "空白") {
-            child.material = areaList[6].material;
-          } else if (child.name == "Retopo_布尔_4_1_1") {
-            child.material = areaList[7].material;
           } else if (child.name == "Retopo_布尔_4") {
-            child.material = areaList[8].material;
+            child.material = areaList[3].material;
           } else if (child.name == "Retopo_细分曲面_3") {
+            child.material = areaList[4].material;
+          } else if (child.name == "Retopo_布尔_4_1_1") {
+            child.material = areaList[5].material;
+          } else if (child.name == "对称_3") {
+            child.material = areaList[6].material;
+          } else if (child.name == "对称") {
+            child.material = areaList[7].material;
+          } else if (child.name == "克隆") {
+            child.material = areaList[8].material;
+          } else if (child.name == "圆柱体_1") {
             child.material = areaList[9].material;
           } else if (child.name == "布尔") {
             child.material = areaList[10].material;
-          } else if (child.name == "对称_1") {
+          } else if (child.name == "空白_1") {
             child.material = areaList[11].material;
-          } else if (child.name == "对称_3") {
+          } else if (child.name == "空白") {
             child.material = areaList[12].material;
           }
         }
       });
-      console.log(object.position);
-      console.log(object);
     });
-    // const material = new THREE.MeshStandardMaterial();
-    // 创建平面
-    // const planeGeometry = new THREE.PlaneBufferGeometry(10, 10);
-    // const plane = new THREE.Mesh(planeGeometry, material);
-    // plane.position.set(0, -1, 0);
-    // plane.rotation.x = -Math.PI / 2;
-    let textureLoader = new THREE.TextureLoader();
-    let texture = textureLoader.load("/material1.jpg");
-    console.log(texture);
-    // 接收阴影
-    let planeGeometry = new THREE.PlaneGeometry(2500, 2500); // 骨架
-    let planeMaterial = new THREE.MeshLambertMaterial({
-      // color: 0x00ffff,
-      map: texture,
-      side: THREE.DoubleSide,
-    }); // 可产生阴影的材质
-    let plane = new THREE.Mesh(planeGeometry, planeMaterial); // 网格
-    plane.receiveShadow = true;
-    console.log(plane.position);
-    plane.position.set(2, -436, 0);
-    // plane.rotation.x = -Math.PI / 2;
-    plane.rotateX(-Math.PI / 2);
-    // plane.envMap = "";
-    scene.add(plane); // 将地面添加到场景中
 
     // 加入控制器
     controls = new OrbitControls(camera, renderer.domElement);
@@ -453,140 +489,263 @@ function init() {
     controlsRef.value = controls;
     controls.autoRotate = true;
 
-    let gui = new GUI();
-    gui.add(areaList[11].material, "metalness", 0.5, 2);
-    gui.add(areaList[11].material, "roughness", 0, 1);
-    gui.add(areaList[11].material, "clearcoat", 0, 2);
-    gui.add(areaList[11].material, "clearcoatRoughness", 0.2, 0.8);
+    // let gui = new GUI();
+    // gui.add(areaList[0].material, "metalness", 0.5, 2);
+    // gui.add(areaList[0].material, "roughness", 0, 1);
+    // gui.add(areaList[0].material, "clearcoat", 0, 2);
+    // gui.add(areaList[0].material, "clearcoatRoughness", 0.2, 0.8);
 
     render();
   }
 }
-// function updateCamera() {
-//   camera.lookAt(0, 0, 0);
-//   camera.updateProjectionMatrix();
-// }
 
-// 视图
+// 是否展示平面
+// let textureLoader, texture;
+// let planeGeometry, planeMaterial;
+let plane;
 
-// 相机视角
-// 顶部
-// camera.position.set(0, 2000, 100);
-// 底部
-// camera.position.set(0, -2000, 100);
-// 切换相机视角
-function animateCamera(current1, target1, current2, target2) {
-  tween = new TWEEN.Tween({
-    x1: current1.x, //  相机当前位置
-    y1: current1.y,
-    z1: current1.z,
-    x2: current2.x, // 控制点当前中心
-    y2: current2.y,
-    z2: current2.z,
-  });
-  tween.to({
-    x1: target1.x, // 新相机位置
-    y1: target1.y,
-    z1: target1.z,
-    x2: target2.x, // 新的控制点中心位置
-    y2: target2.y,
-    z2: target2.z,
-  });
-  tween.onUpdate(function (object) {
-    camera.position.x = object.x1;
-    camera.position.y = object.y1;
-    camera.position.z = object.z1;
-    controls.target.x = object.x2;
-    controls.target.y = object.y2;
-    controls.target.z = object.z2;
-  });
-  // tween.easing(TWEEN.Easing.Cubic.Inout);
-  tween.start();
+const isShowEffect = ref(false);
+function handleEffect() {
+  if (!isShowEffect.value) {
+    showEffect();
+  } else {
+    removeEffect();
+  }
+  isShowEffect.value = !isShowEffect.value;
 }
+
+function createEffect() {
+  // 添加纹理
+  // textureLoader = new THREE.TextureLoader();
+  // texture = textureLoader.load(`./material1.jpg`);
+  // planeGeometry = new THREE.PlaneGeometry(2500, 2500); // 骨架
+  // planeMaterial = new THREE.MeshLambertMaterial({
+  //   map: texture,
+  //   flatShading: true,
+  //   color: "#ffffff",
+  // });
+  // plane = new THREE.Mesh(planeGeometry, planeMaterial); // 网格
+  // plane.receiveShadow = true;
+  // plane.position.set(2, -436, 0);
+  // plane.rotation.x = (-90 * Math.PI) / 180;
+
+  const geometry = new THREE.CircleGeometry(1000, 1000);
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  const size = 400;
+  canvas.width = size;
+  canvas.height = size;
+  const gradient = context.createRadialGradient(
+    size / 2,
+    size / 2,
+    0,
+    size / 2,
+    size / 2,
+    size / 2
+  );
+  gradient.addColorStop(0, "rgba(32,32,32,0.5)"); // 中间浅黑色
+  gradient.addColorStop(1, "rgba(255,255,255,0)"); // 边缘透明
+
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, size, size);
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+  });
+  plane = new THREE.Mesh(geometry, material);
+  plane.position.set(2, -436, 0);
+  plane.rotation.x = (-90 * Math.PI) / 180;
+  plane.receiveShadow = true;
+}
+
+function showEffect() {
+  if (!plane) {
+    createEffect();
+  }
+  scene.add(plane); // 将地面添加到场景中
+}
+
+function removeEffect() {
+  scene.remove(plane);
+}
+
+// 切换相机视角
+// function animateCamera(current1, target1, current2, target2) {
+//   tween = new TWEEN.Tween({
+//     x1: current1.x, //  相机当前位置
+//     y1: current1.y,
+//     z1: current1.z,
+//     x2: current2.x, // 控制点当前中心
+//     y2: current2.y,
+//     z2: current2.z,
+//   });
+//   tween.to({
+//     x1: target1.x, // 新相机位置
+//     y1: target1.y,
+//     z1: target1.z,
+//     x2: target2.x, // 新的控制点中心位置
+//     y2: target2.y,
+//     z2: target2.z,
+//   });
+//   tween.onUpdate(function (object) {
+//     camera.position.x = object.x1;
+//     camera.position.y = object.y1;
+//     camera.position.z = object.z1;
+//     controls.target.x = object.x2;
+//     controls.target.y = object.y2;
+//     controls.target.z = object.z2;
+//   });
+//   // tween.easing(TWEEN.Easing.Cubic.Inout);
+//   tween.start();
+// }
 // animateCamera(camera.position, pos, controls.target, pos2);
 // 点击模型事件
-function onDocumentMouseDown(event) {
-  // 点击屏幕创建一个向量
-  var vector = new THREE.Vector3(
-    (event.clientX / window.innerWidth) * 2 - 1,
-    -(event.clientY / window.innerHeight) * 2 + 1,
-    0.5
-  );
-  vector = vector.unproject(camera); // 将屏幕的坐标转换成三维场景中的坐标
-  var raycaster = new THREE.Raycaster(
-    camera.position,
-    vector.sub(camera.position).normalize()
-  );
-  var intersects = raycaster.intersectObjects(scene.children, true);
+// function onDocumentMouseDown(event) {
+//   // 点击屏幕创建一个向量
+//   var vector = new THREE.Vector3(
+//     (event.clientX / window.innerWidth) * 2 - 1,
+//     -(event.clientY / window.innerHeight) * 2 + 1,
+//     0.5
+//   );
+//   vector = vector.unproject(camera); // 将屏幕的坐标转换成三维场景中的坐标
+//   var raycaster = new THREE.Raycaster(
+//     camera.position,
+//     vector.sub(camera.position).normalize()
+//   );
+//   var intersects = raycaster.intersectObjects(scene.children, true);
 
-  if (intersects.length > 0) {
-    // 随机坐标
-    var x = Math.round(Math.random() * 100);
-    var y = Math.round(Math.random() * 100);
-    var z = 50;
+//   if (intersects.length > 0) {
+//     // 随机坐标
+//     var x = Math.round(Math.random() * 100);
+//     var y = Math.round(Math.random() * 100);
+//     var z = 50;
 
-    var x2 = 0;
-    var y2 = 200;
-    var z2 = 100;
+//     var x2 = 0;
+//     var y2 = 200;
+//     var z2 = 100;
 
-    var pos = new THREE.Vector3(x, y, z);
-    var pos2 = new THREE.Vector3(x2, y2, z2);
-    console.log(camera.position, pos, controls.target, pos2);
-    // intersects[0].object.material.color.set("#55a7bf");
-    animateCamera(camera.position, pos, controls.target, pos2);
-  }
-}
+//     var pos = new THREE.Vector3(x, y, z);
+//     var pos2 = new THREE.Vector3(x2, y2, z2);
+
+//     // console.log(camera.position, pos, controls.target, pos2);
+//     // intersects[0].object.material.color.set("#55a7bf");
+//     animateCamera(camera.position, pos, controls.target, pos2);
+//   }
+// }
 
 // animateCamera();
+// let cameraList = [
+//   {
+//     x: 800,
+//     y: 1100,
+//     z: -1500,
+//   },
+//   {
+//     x: 0,
+//     y: 2100,
+//     z: 0.00016,
+//   },
+//   {
+//     x: 200,
+//     y: 1300,
+//     z: 1200,
+//   },
+//   {
+//     x: 220,
+//     y: -2100,
+//     z: 0,
+//   },
+//   {
+//     x: 2500,
+//     y: 1000,
+//     z: 0,
+//   },
+// ];
+
 let cameraList = [
   {
-    x: 0,
-    y: 2000,
-    z: 100,
+    x: 500,
+    y: 1300,
+    z: 1300,
   },
   {
-    x: 0,
-    y: -2000,
-    z: 100,
+    x: -2500,
+    y: 1000,
+    z: 0,
   },
   {
-    x: 100,
-    y: 300,
-    z: 200,
+    x: -670,
+    y: 1300,
+    z: -1500,
+  },
+  {
+    x: 1200,
+    y: -1300,
+    z: -1300,
   },
   {
     x: 2500,
     y: 1000,
-    z: 100,
+    z: 0,
   },
 ];
 let currentCameraIndex = 0;
+
 function changeCamera() {
+  controls.autoRotate = false;
+  tween.end();
+  let coords = cameraList[currentCameraIndex];
+
   if (currentCameraIndex < cameraList.length - 1) {
-    let coords = cameraList[currentCameraIndex];
-    camera.position.set(coords.x, coords.y, coords.z);
+    tween = new TWEEN.Tween(camera.position)
+      .to(
+        {
+          x: coords.x,
+          y: coords.y,
+          z: coords.z,
+        },
+        2000
+      )
+      .easing(TWEEN.Easing.Quadratic.InOut)
+      .start();
+
     currentCameraIndex += 1;
   } else {
-    let coords = cameraList[currentCameraIndex];
-    camera.position.set(coords.x, coords.y, coords.z);
+    tween = new TWEEN.Tween(camera.position)
+      .to(
+        {
+          x: coords.x,
+          y: coords.y,
+          z: coords.z,
+        },
+        2000
+      )
+      .easing(TWEEN.Easing.Quadratic.InOut)
+      .start();
+
     currentCameraIndex = 0;
   }
 }
 // 重置
 function handleReset() {
+  tween.end();
   for (let i of areaList) {
     i.colorName = "默认颜色";
     i.color = "#fff";
     i.material.color.set("#fff");
   }
   camera.position.set(2500, 1000, 100);
+  controls.autoRotate = true;
 }
 // 创建分享图片
 let shareImage = ref(null);
 function createImage() {
-  shareImage.value = renderer.domElement.toDataURL("image/png");
+  shareImage.value = renderer.domElement.toDataURL("/image/png");
 }
 const onResize = () => {
+  isMobile.value = window.innerWidth < 780 ? true : false;
+
   if (waterRef.value && scene && camera && renderer) {
     const { clientWidth, clientHeight } = waterRef.value;
     // 更新相机
@@ -618,17 +777,56 @@ const render = () => {
   if (controlsRef.value) {
     controlsRef.value?.update();
   }
-  renderer.render(scene, camera);
   frameId = window.requestAnimationFrame(render);
-  // tween.update();
+  TWEEN.update();
+  renderer.render(scene, camera);
 };
+
+// let intersects = null;
+// const raycaster = new THREE.Raycaster();
+
+function showCamera() {
+  console.log("camera.position:", camera.position);
+  // var vector = new THREE.Vector3(
+  //   (event.clientX / window.innerWidth) * 2 - 1,
+  //   -(event.clientY / window.innerHeight) * 2 + 1,
+  //   0.5
+  // );
+  // console.log(vector);
+  // raycaster.setFromCamera(mouse, camera);
+  // intersects = raycaster.intersectObject(scene, true);
+  // if (intersects.length > 0) {
+  //   // let boxMaxY = new THREE.Box3().setFromObject(intersects[0].object).max.y;
+
+  //   // let distance = boxMaxY + 10;
+  //   // let angel = Math.PI / 5;
+
+  //   // let position = {
+  //   //   x: intersects[0].object.position.x + Math.cos(angel) * distance,
+  //   //   y: intersects[0].object.position.y,
+  //   //   z: intersects[0].object.position.z + Math.sin(angel) * distance,
+  //   // };
+
+  //   // tween = new TWEEN.Tween(camera.position).to(position, 3000);
+  //   tween = new TWEEN.Tween(controls.target).to(
+  //     intersects[0].object.position,
+  //     2000
+  //   );
+
+  //   controls.enabled = false;
+  //   tween.onComplete(function () {
+  //     controls.enabled = true;
+  //   });
+
+  //   tween.start();
+  // }
+}
 </script>
 <style scoped>
 .app {
   width: 100%;
   height: 100vh;
   position: relative;
-  /* overflow: hidden; */
 }
 /* 底部选项 */
 .menu-part {
@@ -667,8 +865,9 @@ const render = () => {
 .menu-part li img {
   width: 60px;
   height: 60px;
-  width: 1rem;
-  height: 1rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-bottom: 0.1rem;
   vertical-align: top;
 }
 .menu-part li span {
@@ -839,19 +1038,19 @@ const render = () => {
     height: 100%;
     writing-mode: vertical-lr;
     letter-spacing: 2px;
-    font-size: 0.4rem;
+    font-size: 0.35rem;
   }
   .color-list {
     width: 100%;
     height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow-y: hidden;
+    overflow-x: auto;
     position: unset;
     width: auto;
     height: 100%;
     flex-grow: 1;
     display: flex;
-    overflow-x: auto;
+
     margin: auto 0;
   }
   .color-item {
@@ -901,6 +1100,9 @@ const render = () => {
     height: 0.65rem;
     top: 50%;
     transform: translate(-1rem, -50%);
+  }
+  .menu-part li span {
+    font-size: 0.4rem;
   }
 }
 </style>

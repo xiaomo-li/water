@@ -167,6 +167,46 @@ export default {
           }
         });
       });
+
+      // 创建灯光
+      // 环境光
+      // const ambientLight = new THREE.AmbientLight(0xffffff);
+      // scene.add(ambientLight);
+      // const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+      // hemiLight.position.set(2000, 220, 0);
+      // scene.add(hemiLight);
+
+      // const light1 = new THREE.DirectionalLight(0xffffff, 1);
+      // light1.position.set(0, 0, 100); // 壶嘴
+      // scene.add(light1);
+      // const light2 = new THREE.DirectionalLight(0xffffff, 1);
+      // light2.position.set(0, 0, -100); // 壶把
+      // scene.add(light2);
+
+      // const light3 = new THREE.DirectionalLight(0xffffff, 1);
+      // light3.position.set(200, 0, 40); // 正面
+      // scene.add(light3);
+
+      // const light4 = new THREE.DirectionalLight(0xffffff, 1);
+      // light4.position.set(-200, 0, 40); // 背面
+      // scene.add(light4);
+
+      // const light5 = new THREE.DirectionalLight(0xffffff, 1);
+      // light5.position.set(0, 100, 0); // 顶光
+      // scene.add(light5);
+
+      // const light6 = new THREE.DirectionalLight(0xffffff, 0.7);
+      // light6.position.set(0, 0, 2000); // 壶嘴
+      // scene.add(light6);
+      // const light7 = new THREE.DirectionalLight(0xffffff, 0.7);
+      // light7.position.set(0, 0, -2000); // 壶把
+      // scene.add(light7);
+      // const light8 = new THREE.DirectionalLight(0xffffff, 2);
+      // light8.position.set(-100, -120, 0); // 背面+ 底部
+      // scene.add(light8);
+      // const light9 = new THREE.DirectionalLight(0xffffff, 2);
+      // light9.position.set(100, 120, 0); // 正面+顶部
+      // scene.add(light9);
       // 壶盖
 
       const controls = new OrbitControls(camera, renderer.domElement);
