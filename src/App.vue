@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import WaterPage from "./components/WaterPage2.vue";
+import WaterPage from "./components/WaterPage3.vue";
 export default {
   name: "App",
   components: {

@@ -156,7 +156,8 @@ import { ref, onMounted, onUnmounted, watchEffect } from "vue";
 import * as THREE from "three";
 import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-// import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+// import { HDRCubeTextureLoader } from "three/addons/loaders/HDRCubeTextureLoader.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 // import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 import * as TWEEN from "@tweenjs/tween.js";
 import "../style/style.css";
@@ -354,18 +355,19 @@ function handleSelectArea(info, index) {
   showColorList.value = true;
 
   let coords = areaList[index].coords;
-  tween = new TWEEN.Tween(camera.position)
-    .to(
-      {
-        x: coords.x ? coords.x : camera.position.x,
-        y: coords.y,
-        z: coords.z,
-      },
-      2500
-    )
-    .easing(TWEEN.Easing.Quadratic.InOut)
-    .start();
-  // camera.position.set(coords.x, coords.y, coords.z);
+  camera.position.set(coords.x, coords.y, coords.z);
+
+  // tween = new TWEEN.Tween(camera.position)
+  //   .to(
+  //     {
+  //       x: coords.x ? coords.x : camera.position.x,
+  //       y: coords.y,
+  //       z: coords.z,
+  //     },
+  //     2500
+  //   )
+  //   .easing(TWEEN.Easing.Quadratic.InOut)
+  //   .start();
 }
 for (let i of areaList) {
   i.material = new THREE.MeshPhysicalMaterial({
@@ -390,11 +392,15 @@ function init() {
     camera.position.set(2500, 1000, 100);
     renderer = new THREE.WebGLRenderer({
       antialias: true,
+      // alpha: true,
       preserveDrawingBuffer: true,
+      logarithmicDepthBuffer: true,
     });
+
+    renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap; // 默认的阴影类型
-    renderer.setClearColor("#224141");
+    renderer.setClearColor("#ffffff");
     renderer.setSize(window.innerWidth, window.innerHeight);
     waterRef.value.append(renderer.domElement);
 
@@ -402,51 +408,49 @@ function init() {
     // 环境光
     const ambientLight = new THREE.AmbientLight(0xffffff, 2);
     scene.add(ambientLight);
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
-    hemiLight.position.set(1000, 220, 0);
-    scene.add(hemiLight);
 
     const light1 = new THREE.DirectionalLight(0xffffff, 0.7);
     light1.position.set(0, 0, 100); // 壶嘴
     scene.add(light1);
-    const light2 = new THREE.DirectionalLight(0xffffff, 0.7);
-    light2.position.set(0, 0, -100); // 壶把
-    scene.add(light2);
+    // const light2 = new THREE.DirectionalLight(0xffffff, 0.7);
+    // light2.position.set(0, 0, -100); // 壶把
+    // scene.add(light2);
 
     const light3 = new THREE.DirectionalLight(0xffffff, 0.9);
     light3.position.set(200, 0, 40); // 正面
     scene.add(light3);
 
-    const light4 = new THREE.DirectionalLight(0xffffff, 0.9);
+    const light4 = new THREE.DirectionalLight(0xffffff, 1.9);
     light4.position.set(-200, 200, 40); // 背面
     scene.add(light4);
 
-    const light5 = new THREE.DirectionalLight(0xffffff, 1.5);
+    const light5 = new THREE.DirectionalLight(0xffffff, 1);
     light5.position.set(0, 100, 0); // 顶光
     scene.add(light5);
 
-    const light6 = new THREE.DirectionalLight(0xffffff, 0.3);
+    const light6 = new THREE.DirectionalLight(0xffffff, 1);
     light6.position.set(1000, 100, 1000); // 壶嘴
     scene.add(light6);
-    const light7 = new THREE.DirectionalLight(0xffffff, 0.3);
-    light7.position.set(-1000, -100, -1000); // 壶把
-    scene.add(light7);
-    const light8 = new THREE.DirectionalLight(0xffffff, 3);
+    // const light7 = new THREE.DirectionalLight(0xffffff, 1);
+    // light7.position.set(-1000, -100, -1000); // 壶把
+    // scene.add(light7);
+    const light8 = new THREE.DirectionalLight(0xffffff, 1.5);
     light8.position.set(-500, 0, 0); // 背面+ 底部
     scene.add(light8);
-    const light9 = new THREE.DirectionalLight(0xffffff, 3);
+    const light9 = new THREE.DirectionalLight(0xffffff, 1);
     light9.position.set(500, 200, 0); // 正面+顶部
     scene.add(light9);
 
     // 引入并渲染模型
     const loader = new FBXLoader();
     loader.load(`./model/1.fbx`, function (object) {
+      console.log(object);
       isLoading.value = false;
       scene.add(object);
-      object.castShadow = true;
+      // object.castShadow = true;
       object.traverse(function (child) {
-        child.castShadow = true;
-        child.receiveShadow = true;
+        // child.castShadow = true;
+        // child.receiveShadow = true;
         if (child.isMesh) {
           // 壶盖
           if (child.name == "对称_1") {
@@ -478,6 +482,7 @@ function init() {
             child.material = areaList[12].material;
           }
         }
+        // child.material.shading = THREE.SmoothShading;
       });
     });
 
@@ -485,7 +490,7 @@ function init() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.update();
     controls.minDistance = 1500;
-    controls.maxDistance = 4000;
+    controls.maxDistance = 3500;
     controlsRef.value = controls;
     controls.autoRotate = true;
 
@@ -495,6 +500,27 @@ function init() {
     // gui.add(areaList[0].material, "clearcoat", 0, 2);
     // gui.add(areaList[0].material, "clearcoatRoughness", 0.2, 0.8);
 
+    // const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    // const sphere = new THREE.Mesh(sphereGeometry, whiteMaterial);
+    // sphere.position.set(0, 0, 0);
+    // scene.add(sphere);
+
+    new RGBELoader().load("./model/room3.hdr", function (texture) {
+      const pmremGenerator = new THREE.PMREMGenerator(renderer);
+      pmremGenerator.compileEquirectangularShader();
+      const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+      scene.environment = envMap;
+      texture.dispose();
+      pmremGenerator.dispose();
+
+      // scene.environment = texture;
+      // scene.environment.mapping = THREE.EquirectangularReflectionMapping;
+      // scene.background = texture;
+      // renderer.outputEncoding = THREE.sRGBEncoding;
+      // renderer.render(scene, camera);
+
+      //  child.material.envMap=textureCube;
+    });
     render();
   }
 }
@@ -502,6 +528,18 @@ function init() {
 // 是否展示平面
 // let textureLoader, texture;
 // let planeGeometry, planeMaterial;
+// textureLoader = new THREE.TextureLoader();
+// texture = textureLoader.load(`./material1.jpg`);
+// planeGeometry = new THREE.PlaneGeometry(2500, 2500); // 骨架
+// planeMaterial = new THREE.MeshLambertMaterial({
+//   map: texture,
+//   flatShading: true,
+//   color: "#ffffff",
+// });
+// plane = new THREE.Mesh(planeGeometry, planeMaterial); // 网格
+// plane.receiveShadow = true;
+// plane.position.set(2, -436, 0);
+// plane.rotation.x = (-90 * Math.PI) / 180;
 let plane;
 
 const isShowEffect = ref(false);
@@ -516,18 +554,6 @@ function handleEffect() {
 
 function createEffect() {
   // 添加纹理
-  // textureLoader = new THREE.TextureLoader();
-  // texture = textureLoader.load(`./material1.jpg`);
-  // planeGeometry = new THREE.PlaneGeometry(2500, 2500); // 骨架
-  // planeMaterial = new THREE.MeshLambertMaterial({
-  //   map: texture,
-  //   flatShading: true,
-  //   color: "#ffffff",
-  // });
-  // plane = new THREE.Mesh(planeGeometry, planeMaterial); // 网格
-  // plane.receiveShadow = true;
-  // plane.position.set(2, -436, 0);
-  // plane.rotation.x = (-90 * Math.PI) / 180;
 
   const geometry = new THREE.CircleGeometry(1000, 1000);
   const canvas = document.createElement("canvas");
@@ -556,7 +582,7 @@ function createEffect() {
   plane = new THREE.Mesh(geometry, material);
   plane.position.set(2, -436, 0);
   plane.rotation.x = (-90 * Math.PI) / 180;
-  plane.receiveShadow = true;
+  // plane.receiveShadow = true;
 }
 
 function showEffect() {
@@ -691,45 +717,53 @@ let cameraList = [
   },
 ];
 let currentCameraIndex = 0;
-
+function tweenEnd() {
+  if (tween && tween.end) {
+    tween.end();
+  }
+}
 function changeCamera() {
   controls.autoRotate = false;
-  tween.end();
+  tweenEnd();
+
   let coords = cameraList[currentCameraIndex];
 
   if (currentCameraIndex < cameraList.length - 1) {
-    tween = new TWEEN.Tween(camera.position)
-      .to(
-        {
-          x: coords.x,
-          y: coords.y,
-          z: coords.z,
-        },
-        2000
-      )
-      .easing(TWEEN.Easing.Quadratic.InOut)
-      .start();
+    camera.position.set(coords.x, coords.y, coords.z);
+    // tween = new TWEEN.Tween(camera.position)
+    //   .to(
+    //     {
+    //       x: coords.x,
+    //       y: coords.y,
+    //       z: coords.z,
+    //     },
+    //     2000
+    //   )
+    //   .easing(TWEEN.Easing.Quadratic.InOut)
+    //   .start();
 
     currentCameraIndex += 1;
   } else {
-    tween = new TWEEN.Tween(camera.position)
-      .to(
-        {
-          x: coords.x,
-          y: coords.y,
-          z: coords.z,
-        },
-        2000
-      )
-      .easing(TWEEN.Easing.Quadratic.InOut)
-      .start();
+    // tween = new TWEEN.Tween(camera.position)
+    //   .to(
+    //     {
+    //       x: coords.x,
+    //       y: coords.y,
+    //       z: coords.z,
+    //     },
+    //     2000
+    //   )
+    //   .easing(TWEEN.Easing.Quadratic.InOut)
+    //   .start();
+    camera.position.set(coords.x, coords.y, coords.z);
 
     currentCameraIndex = 0;
   }
 }
 // 重置
 function handleReset() {
-  tween.end();
+  tweenEnd();
+
   for (let i of areaList) {
     i.colorName = "默认颜色";
     i.color = "#fff";
