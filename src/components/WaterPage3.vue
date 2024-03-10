@@ -199,7 +199,7 @@ import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 // import { GUI } from "three/addons/libs/lil-gui.module.min.js";
-import * as TWEEN from "@tweenjs/tween.js";
+// import * as TWEEN from "@tweenjs/tween.js";
 import "../style/style.css";
 
 const isMobile = ref(false);
@@ -335,7 +335,7 @@ const waterRef = ref(null);
 let frameId = 0;
 let controls;
 const controlsRef = ref(null);
-let tween;
+// let tween;
 let plane;
 // 切换颜色
 function switchColor(index, colorInfo) {
@@ -562,14 +562,14 @@ let cameraList = [
   },
 ];
 let currentCameraIndex = 0;
-function tweenEnd() {
-  if (tween && tween.end) {
-    tween.end();
-  }
-}
+// function tweenEnd() {
+//   if (tween && tween.end) {
+//     tween.end();
+//   }
+// }
 function changeCamera() {
   controls.autoRotate = false;
-  tweenEnd();
+  // tweenEnd();
 
   let coords = cameraList[currentCameraIndex];
 
@@ -585,7 +585,7 @@ function changeCamera() {
 }
 // 重置
 function handleReset() {
-  tweenEnd();
+  // tweenEnd();
 
   for (let i of areaList) {
     i.colorName = "默认颜色";
@@ -646,7 +646,7 @@ const render = () => {
     controlsRef.value?.update();
   }
   frameId = window.requestAnimationFrame(render);
-  TWEEN.update();
+  // TWEEN.update();
   renderer.render(scene, camera);
 };
 
