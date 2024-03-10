@@ -2,8 +2,8 @@
   <div class="app">
     <div ref="waterRef" @click="showCamera"></div>
 
-    <img class="logo" src="../assets/logo.png" alt="" />
-
+    <img ref="logo" class="logo" src="../assets/logo.png" alt="" />
+    <!-- 加载动画 -->
     <div class="loading" v-if="isLoading">
       <div class="sk-circle">
         <div class="sk-circle1 sk-child"></div>
@@ -52,18 +52,26 @@
       </ul>
     </div>
     <!-- 分享图片 -->
+
     <div class="share-wrap" v-show="shareImage !== null">
-      <div class="share-inner">
+      <div class="share-inner fade-in">
         <img
           src="../assets/close.png"
           alt=""
           class="close-icon"
           @click="shareImage = null"
         />
+
         <div class="share-header">分享图片</div>
         <div class="share-body">
+          <img class="logo logo2" src="../assets/logo.png" alt="" />
           <a :href="shareImage" download="kettle.png">
-            <img class="share-img" :src="shareImage" alt="" />
+            <img
+              class="share-img"
+              :src="shareImage"
+              alt=""
+              crossorigin="anonymous"
+            />
           </a>
         </div>
         <div class="share-footer">
@@ -74,6 +82,7 @@
         </div>
       </div>
     </div>
+
     <!-- 选择部位 -->
     <transition>
       <div class="area-menu area-menu1" v-show="showAreaList">
@@ -127,12 +136,23 @@
               src="../assets/return1.png"
               alt=""
               class="return-btn"
+              v-show="!isMobile"
               @click="
                 showAreaList = !showAreaList;
                 showColorList = false;
               "
             />
-            <div class="area-name">{{ currentArea }}</div>
+            <div class="area-name" v-show="!isMobile">{{ currentArea }}</div>
+            <div
+              class="area-name"
+              v-show="isMobile"
+              @click="
+                showAreaList = !showAreaList;
+                showColorList = false;
+              "
+            >
+              返回
+            </div>
           </div>
           <div class="color-list" v-if="isMobile == false">
             <div
@@ -193,14 +213,14 @@ const currentAreaIndex = ref(null);
 // 部位
 const areaList = [
   {
-    areaName: "壶体", // 对称_1
+    areaName: "上开关", // 开盖按钮
     colorName: "默认颜色",
     color: "#fff",
-    coords: { x: 2500, y: 1000, z: 0 },
+    coords: { x: 1100, y: 830, z: -2200 },
     material: null,
   },
   {
-    areaName: "水壶盖", // Retopo_布尔_4_1
+    areaName: "水壶盖", // 盖子
     colorName: "默认颜色",
     color: "#fff",
     // coords: { x: 770, y: 1500, z: -390 },
@@ -208,36 +228,36 @@ const areaList = [
     material: null,
   },
   {
-    areaName: "底座", // 挤压
+    areaName: "壶体", // 把手内侧 对称_1
+    colorName: "默认颜色",
+    color: "#fff",
+    coords: { x: 2500, y: 1000, z: 0 },
+    material: null,
+  },
+  {
+    areaName: "把手", // 把手外侧
+    colorName: "默认颜色",
+    color: "#fff",
+    coords: { x: 1100, y: 830, z: -2200 },
+    material: null,
+  },
+  {
+    areaName: "按钮", // 电源开盖
+    colorName: "默认颜色",
+    color: "#fff",
+    coords: { x: 1100, y: 830, z: -2200 },
+    material: null,
+  },
+  {
+    areaName: "底座", // 挤压 克隆  路径_9 路径_6 圆柱体_1
     colorName: "默认颜色",
     color: "#fff",
     coords: { x: 2500, y: 1000, z: 100 },
     material: null,
   },
-  {
-    areaName: "把手", // Retopo_布尔_4
-    colorName: "默认颜色",
-    color: "#fff",
-    coords: { x: 1100, y: 830, z: -2200 },
-    material: null,
-  },
 
   {
-    areaName: "按钮", // Retopo_细分曲面_3
-    colorName: "默认颜色",
-    color: "#fff",
-    coords: { x: 1100, y: 830, z: -2200 },
-    material: null,
-  },
-  {
-    areaName: "指示灯", // Retopo_布尔_4_1_1
-    colorName: "默认颜色",
-    color: "#fff",
-    coords: { x: 1100, y: 830, z: -2200 },
-    material: null,
-  },
-  {
-    areaName: "上开关",
+    areaName: "指示灯", // 指示灯
     colorName: "默认颜色",
     color: "#fff",
     coords: { x: 1100, y: 830, z: -2200 },
@@ -332,21 +352,6 @@ function handleSelectArea(info, index) {
   currentAreaIndex.value = index;
   showAreaList.value = false;
   showColorList.value = true;
-
-  // let coords = areaList[index].coords;
-  // camera.position.set(coords.x, coords.y, coords.z);
-
-  // tween = new TWEEN.Tween(camera.position)
-  //   .to(
-  //     {
-  //       x: coords.x ? coords.x : camera.position.x,
-  //       y: coords.y,
-  //       z: coords.z,
-  //     },
-  //     2500
-  //   )
-  //   .easing(TWEEN.Easing.Quadratic.InOut)
-  //   .start();
 }
 for (let i of areaList) {
   i.material = new THREE.MeshPhysicalMaterial({
@@ -372,15 +377,14 @@ function init() {
 
     renderer = new THREE.WebGLRenderer({
       antialias: true,
-      // alpha: true,
-      preserveDrawingBuffer: true,
-      logarithmicDepthBuffer: true,
+      preserveDrawingBuffer: true, // 生成图片必备项
+      logarithmicDepthBuffer: true, // 抗锯齿
     });
 
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // 默认的阴影类型
-    renderer.setClearColor("#ffffff");
+    renderer.shadowMap.type = THREE.PCFShadowMap; // 默认的阴影类型
+    // renderer.setClearColor("#ffffff");
     renderer.setSize(window.innerWidth, window.innerHeight);
     waterRef.value.append(renderer.domElement);
 
@@ -397,14 +401,10 @@ function init() {
     // scene.add(light2);
 
     const light3 = new THREE.DirectionalLight(0xffffff, 0.9);
-    light3.position.set(200, 0, 40); // 正面
+    light3.position.set(-20, 0, 4); // 背面
     scene.add(light3);
 
-    const light4 = new THREE.DirectionalLight(0xffffff, 1.9);
-    light4.position.set(-200, 200, 40); // 背面
-    scene.add(light4);
-
-    const light5 = new THREE.DirectionalLight(0xffffff, 1);
+    const light5 = new THREE.DirectionalLight(0xffffff, 0.5);
     light5.position.set(0, 100, 0); // 顶光
     scene.add(light5);
 
@@ -414,12 +414,38 @@ function init() {
     // const light7 = new THREE.DirectionalLight(0xffffff, 1);
     // light7.position.set(-1000, -100, -1000); // 壶把
     // scene.add(light7);
-    const light8 = new THREE.DirectionalLight(0xffffff, 1.5);
+    const light8 = new THREE.DirectionalLight(0xffffff, 1);
     light8.position.set(-500, 0, 0); // 背面+ 底部
     scene.add(light8);
-    const light9 = new THREE.DirectionalLight(0xffffff, 1);
-    light9.position.set(500, 200, 0); // 正面+顶部
-    scene.add(light9);
+    // const light9 = new THREE.DirectionalLight(0xffffff, 1);
+    // light9.position.set(500, 200, 0); // 正面+顶部
+    // scene.add(light9);
+    const light4 = new THREE.DirectionalLight(0xffffff, 2.9);
+    // light4.position.set(-200, 200, 40); // 正面
+    light4.position.set(20, 40, 4);
+    scene.add(light4);
+    light4.shadow.camera.near = 0.1;
+    // light4.shadow.camera.far = 250;
+    light4.shadow.camera.left = -50;
+    light4.shadow.camera.right = 60;
+    light4.shadow.camera.top = 50;
+    light4.shadow.radius = 2;
+    light4.castShadow = true;
+    // light4.shadow.camera.bottom = 50;
+
+    // 接收阴影的平面
+
+    let planeGeometry, planeMaterial;
+
+    planeGeometry = new THREE.PlaneGeometry(500, 500); // 骨架
+    planeMaterial = new THREE.MeshPhongMaterial({
+      color: 0xffffff,
+    });
+    plane = new THREE.Mesh(planeGeometry, planeMaterial); // 网格
+    plane.position.set(0, -15, 0);
+    plane.receiveShadow = true;
+    plane.rotation.x = (-90 * Math.PI) / 180;
+    scene.add(plane);
 
     // 引入并渲染模型
     const loader = new FBXLoader();
@@ -427,16 +453,14 @@ function init() {
       isLoading.value = false;
       object.position.set(0, -15, 0);
       scene.add(object);
-      // object.castShadow = true;
+
       object.traverse(function (child) {
-        // child.castShadow = true;
-        // child.receiveShadow = true;
         if (child.isMesh) {
-          // 壶盖
+          child.castShadow = true;
+
           if (child.name == "对称_1" || child.name == "把手内侧") {
-            child.material = areaList[0].material;
+            child.material = areaList[2].material;
           } else if (child.name == "盖子") {
-            // 壶把外侧
             child.material = areaList[1].material;
           } else if (
             child.name == "挤压" ||
@@ -445,21 +469,20 @@ function init() {
             child.name == "路径_6" ||
             child.name == "圆柱体_1"
           ) {
-            child.material = areaList[2].material;
+            child.material = areaList[5].material;
           } else if (child.name == "把手外侧") {
             child.material = areaList[3].material;
           } else if (child.name == "电源开盖") {
             child.material = areaList[4].material;
           } else if (child.name == "指示灯") {
-            child.material = areaList[5].material;
+            child.material = areaList[6].material;
           } else if (child.name == "布尔" || child.name == "不锈钢金属") {
             child.material = matter;
           } else if (child.name == "开盖按钮") {
-            // 壶把外侧
-            child.material = areaList[6].material;
+            // 上开关
+            child.material = areaList[0].material;
           }
         }
-        // child.material.shading = THREE.SmoothShading;
       });
     });
     // 管道_2 顶部半圆
@@ -483,8 +506,8 @@ function init() {
     controls.autoRotate = true;
     let matter = new THREE.MeshPhysicalMaterial({
       color: "silver",
-      metalness: 0.6, // 金属度
-      roughness: 0.5, // 粗糙度
+      metalness: 0.7, // 金属度
+      roughness: 0.37, // 粗糙度
       clearcoat: 0.3, // 轻漆
       clearcoatRoughness: 0.6, // 轻漆粗糙度
     });
@@ -494,11 +517,6 @@ function init() {
     // gui.add(matter, "clearcoat", 0, 2);
     // gui.add(matter, "clearcoatRoughness", 0.2, 0.8);
 
-    // const whiteMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    // const sphere = new THREE.Mesh(sphereGeometry, whiteMaterial);
-    // sphere.position.set(0, 0, 0);
-    // scene.add(sphere);
-
     new RGBELoader().load("./model/room3.hdr", function (texture) {
       const pmremGenerator = new THREE.PMREMGenerator(renderer);
       pmremGenerator.compileEquirectangularShader();
@@ -506,168 +524,15 @@ function init() {
       scene.environment = envMap;
       texture.dispose();
       pmremGenerator.dispose();
-
-      // scene.environment = texture;
-      // scene.environment.mapping = THREE.EquirectangularReflectionMapping;
-      // scene.background = texture;
-      // renderer.outputEncoding = THREE.sRGBEncoding;
-      // renderer.render(scene, camera);
-
-      //  child.material.envMap=textureCube;
     });
 
-    createEffect();
-    scene.add(plane);
-    console.log(plane);
     render();
   }
 }
 
-// 是否展示平面
-// let textureLoader, texture;
-// let planeGeometry, planeMaterial;
-// textureLoader = new THREE.TextureLoader();
-// texture = textureLoader.load(`./material1.jpg`);
-// planeGeometry = new THREE.PlaneGeometry(2500, 2500); // 骨架
-// planeMaterial = new THREE.MeshLambertMaterial({
-//   map: texture,
-//   flatShading: true,
-//   color: "#ffffff",
-// });
-// plane = new THREE.Mesh(planeGeometry, planeMaterial); // 网格
-// plane.receiveShadow = true;
-// plane.position.set(2, -436, 0);
-// plane.rotation.x = (-90 * Math.PI) / 180;
-
-function createEffect() {
-  // 添加纹理
-
-  const geometry = new THREE.CircleGeometry(100, 100);
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  const size = 400;
-  canvas.width = size;
-  canvas.height = size;
-  const gradient = context.createRadialGradient(
-    size / 2,
-    size / 2,
-    0,
-    size / 2,
-    size / 2,
-    size / 2
-  );
-  gradient.addColorStop(0, "rgba(32,32,32,0.5)"); // 中间浅黑色
-  gradient.addColorStop(1, "rgba(255,255,255,0)"); // 边缘透明
-
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, size, size);
-  const texture = new THREE.CanvasTexture(canvas);
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    transparent: true,
-  });
-  plane = new THREE.Mesh(geometry, material);
-  plane.position.set(0, -15, 0);
-  plane.rotation.x = (-90 * Math.PI) / 180;
-  scene.add(plane);
-  // plane.receiveShadow = true;
-}
 function handleEffect() {
   controls.autoRotate = !controls.autoRotate;
 }
-
-// 切换相机视角
-// function animateCamera(current1, target1, current2, target2) {
-//   tween = new TWEEN.Tween({
-//     x1: current1.x, //  相机当前位置
-//     y1: current1.y,
-//     z1: current1.z,
-//     x2: current2.x, // 控制点当前中心
-//     y2: current2.y,
-//     z2: current2.z,
-//   });
-//   tween.to({
-//     x1: target1.x, // 新相机位置
-//     y1: target1.y,
-//     z1: target1.z,
-//     x2: target2.x, // 新的控制点中心位置
-//     y2: target2.y,
-//     z2: target2.z,
-//   });
-//   tween.onUpdate(function (object) {
-//     camera.position.x = object.x1;
-//     camera.position.y = object.y1;
-//     camera.position.z = object.z1;
-//     controls.target.x = object.x2;
-//     controls.target.y = object.y2;
-//     controls.target.z = object.z2;
-//   });
-//   // tween.easing(TWEEN.Easing.Cubic.Inout);
-//   tween.start();
-// }
-// animateCamera(camera.position, pos, controls.target, pos2);
-// 点击模型事件
-// function onDocumentMouseDown(event) {
-//   // 点击屏幕创建一个向量
-//   var vector = new THREE.Vector3(
-//     (event.clientX / window.innerWidth) * 2 - 1,
-//     -(event.clientY / window.innerHeight) * 2 + 1,
-//     0.5
-//   );
-//   vector = vector.unproject(camera); // 将屏幕的坐标转换成三维场景中的坐标
-//   var raycaster = new THREE.Raycaster(
-//     camera.position,
-//     vector.sub(camera.position).normalize()
-//   );
-//   var intersects = raycaster.intersectObjects(scene.children, true);
-
-//   if (intersects.length > 0) {
-//     // 随机坐标
-//     var x = Math.round(Math.random() * 100);
-//     var y = Math.round(Math.random() * 100);
-//     var z = 50;
-
-//     var x2 = 0;
-//     var y2 = 200;
-//     var z2 = 100;
-
-//     var pos = new THREE.Vector3(x, y, z);
-//     var pos2 = new THREE.Vector3(x2, y2, z2);
-
-//     // console.log(camera.position, pos, controls.target, pos2);
-//     // intersects[0].object.material.color.set("#55a7bf");
-//     animateCamera(camera.position, pos, controls.target, pos2);
-//   }
-// }
-
-// animateCamera();
-// let cameraList = [
-//   {
-//     x: 800,
-//     y: 1100,
-//     z: -1500,
-//   },
-//   {
-//     x: 0,
-//     y: 2100,
-//     z: 0.00016,
-//   },
-//   {
-//     x: 200,
-//     y: 1300,
-//     z: 1200,
-//   },
-//   {
-//     x: 220,
-//     y: -2100,
-//     z: 0,
-//   },
-//   {
-//     x: 2500,
-//     y: 1000,
-//     z: 0,
-//   },
-// ];
 
 let cameraList = [
   {
@@ -710,31 +575,9 @@ function changeCamera() {
 
   if (currentCameraIndex < cameraList.length - 1) {
     camera.position.set(coords.x, coords.y, coords.z);
-    // tween = new TWEEN.Tween(camera.position)
-    //   .to(
-    //     {
-    //       x: coords.x,
-    //       y: coords.y,
-    //       z: coords.z,
-    //     },
-    //     2000
-    //   )
-    //   .easing(TWEEN.Easing.Quadratic.InOut)
-    //   .start();
 
     currentCameraIndex += 1;
   } else {
-    // tween = new TWEEN.Tween(camera.position)
-    //   .to(
-    //     {
-    //       x: coords.x,
-    //       y: coords.y,
-    //       z: coords.z,
-    //     },
-    //     2000
-    //   )
-    //   .easing(TWEEN.Easing.Quadratic.InOut)
-    //   .start();
     camera.position.set(coords.x, coords.y, coords.z);
 
     currentCameraIndex = 0;
@@ -754,8 +597,19 @@ function handleReset() {
 }
 // 创建分享图片
 let shareImage = ref(null);
+let logo = ref(null);
+
 function createImage() {
-  shareImage.value = renderer.domElement.toDataURL("/image/png");
+  // 将logo和图片结合在一起
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  canvas.width = renderer.domElement.width;
+  canvas.height = renderer.domElement.height;
+  console.log(canvas.width, canvas.height);
+  context.drawImage(renderer.domElement, 0, 0);
+  context.drawImage(logo.value, 20, 20, logo.value.width, logo.value.height);
+  shareImage.value = canvas.toDataURL("image/png");
+  // shareImage.value = renderer.domElement.toDataURL("/image/png");
 }
 const onResize = () => {
   isMobile.value = window.innerWidth < 780 ? true : false;
@@ -796,46 +650,8 @@ const render = () => {
   renderer.render(scene, camera);
 };
 
-// let intersects = null;
-// const raycaster = new THREE.Raycaster();
-
 function showCamera() {
-  // console.log("camera.position:", camera.position);
-  console.log(camera);
-  console.log(camera.polarAngle);
-  // var vector = new THREE.Vector3(
-  //   (event.clientX / window.innerWidth) * 2 - 1,
-  //   -(event.clientY / window.innerHeight) * 2 + 1,
-  //   0.5
-  // );
-  // console.log(vector);
-  // raycaster.setFromCamera(mouse, camera);
-  // intersects = raycaster.intersectObject(scene, true);
-  // if (intersects.length > 0) {
-  //   // let boxMaxY = new THREE.Box3().setFromObject(intersects[0].object).max.y;
-
-  //   // let distance = boxMaxY + 10;
-  //   // let angel = Math.PI / 5;
-
-  //   // let position = {
-  //   //   x: intersects[0].object.position.x + Math.cos(angel) * distance,
-  //   //   y: intersects[0].object.position.y,
-  //   //   z: intersects[0].object.position.z + Math.sin(angel) * distance,
-  //   // };
-
-  //   // tween = new TWEEN.Tween(camera.position).to(position, 3000);
-  //   tween = new TWEEN.Tween(controls.target).to(
-  //     intersects[0].object.position,
-  //     2000
-  //   );
-
-  //   controls.enabled = false;
-  //   tween.onComplete(function () {
-  //     controls.enabled = true;
-  //   });
-
-  //   tween.start();
-  // }
+  console.log("camera.position:", camera.position);
 }
 </script>
 <style scoped>
@@ -854,7 +670,7 @@ function showCamera() {
   right: 0;
   bottom: 0;
   /* background: rgba(0, 0, 0, 0.1); */
-  z-index: 66;
+  z-index: 6;
 }
 
 .menu-part ul {
@@ -903,7 +719,6 @@ function showCamera() {
   right: 10px;
   top: 150px;
   bottom: 148px;
-  /* animation: fade-in 0.5s; */
 }
 
 .v-enter-active,
@@ -916,14 +731,29 @@ function showCamera() {
   opacity: 0;
   transform: translateX(100%);
 }
+
+.fade-in {
+  animation: fade-in 0.5s;
+}
+
 @keyframes fade-in {
   0% {
     opacity: 0;
-    transform: translateX(100%);
+    top: 100%;
   }
   100% {
     opacity: 1;
-    transform: translateX(0);
+    top: 50%;
+  }
+}
+@keyframes fade-out {
+  0% {
+    opacity: 1;
+    top: 50%;
+  }
+  100% {
+    opacity: 0;
+    top: 100%;
   }
 }
 .area-menu > div {
@@ -1062,6 +892,7 @@ function showCamera() {
   height: 0.66666667rem;
   right: 0;
   transform: translate(0.33333333rem, -0.33333333rem);
+  cursor: pointer;
 }
 .logo {
   position: absolute;
@@ -1069,6 +900,7 @@ function showCamera() {
   left: 0.5rem;
   width: 2rem;
   height: auto;
+  z-index: 2;
 }
 .sp-relative {
   position: relative;
@@ -1086,6 +918,10 @@ function showCamera() {
     width: 30vw;
     height: auto;
   }
+  .logo2 {
+    width: 20vw;
+    height: auto;
+  }
   .area-menu {
     bottom: 2rem;
     height: 2.2rem;
@@ -1101,11 +937,12 @@ function showCamera() {
     /* transform: translate3d(-115%, 0, 0); */
   }
   .area-menu .area-name {
-    width: 1.25rem;
+    /* writing-mode: vertical-lr; */
+    width: 0.8rem;
     height: 100%;
-    writing-mode: vertical-lr;
     letter-spacing: 2px;
     font-size: 0.35rem;
+    flex-shrink: 0;
   }
   .color-list {
     width: 100%;
@@ -1170,6 +1007,12 @@ function showCamera() {
   }
   .menu-part li span {
     font-size: 0.4rem;
+  }
+  .menu-part li img {
+    padding: 3px;
+  }
+  .menu-part li:nth-child(3) img {
+    padding: 5px;
   }
 }
 </style>

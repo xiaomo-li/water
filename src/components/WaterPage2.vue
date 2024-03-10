@@ -162,6 +162,7 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import * as TWEEN from "@tweenjs/tween.js";
 import "../style/style.css";
 
+compose(result);
 const isMobile = ref(false);
 const isLoading = ref(true);
 const showAreaList = ref(false);
@@ -387,14 +388,15 @@ function init() {
       45,
       window.innerWidth / window.innerHeight,
       1,
-      4000
+      1200
     );
-    camera.position.set(2500, 1000, 100);
+    camera.position.set(250, 100, 10);
+
     renderer = new THREE.WebGLRenderer({
       antialias: true,
       // alpha: true,
       preserveDrawingBuffer: true,
-      logarithmicDepthBuffer: true,
+      // logarithmicDepthBuffer: true,
     });
 
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -403,7 +405,6 @@ function init() {
     renderer.setClearColor("#ffffff");
     renderer.setSize(window.innerWidth, window.innerHeight);
     waterRef.value.append(renderer.domElement);
-
     // 创建灯光
     // 环境光
     const ambientLight = new THREE.AmbientLight(0xffffff, 2);
@@ -443,8 +444,9 @@ function init() {
 
     // 引入并渲染模型
     const loader = new FBXLoader();
-    loader.load(`./model/1.fbx`, function (object) {
+    loader.load(`./model/4.fbx`, function (object) {
       console.log(object);
+      object.position.set(0, -15, 0);
       isLoading.value = false;
       scene.add(object);
       // object.castShadow = true;
@@ -489,8 +491,8 @@ function init() {
     // 加入控制器
     controls = new OrbitControls(camera, renderer.domElement);
     controls.update();
-    controls.minDistance = 1500;
-    controls.maxDistance = 3500;
+    controls.minDistance = 50;
+    controls.maxDistance = 150;
     controlsRef.value = controls;
     controls.autoRotate = true;
 
