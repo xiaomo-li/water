@@ -354,13 +354,19 @@ function handleSelectArea(info, index) {
   showColorList.value = true;
 }
 for (let i of areaList) {
-  i.material = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    metalness: 0.8, // 金属度
-    roughness: 0.9, // 粗糙度
-    clearcoat: 0.3, // 轻漆
-    clearcoatRoughness: 0.4, // 轻漆粗糙度
-  });
+  if (i.areaName == "指示灯") {
+    i.material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+    });
+  } else {
+    i.material = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      metalness: 0.8, // 金属度
+      roughness: 0.9, // 粗糙度
+      clearcoat: 0.3, // 轻漆
+      clearcoatRoughness: 0.4, // 轻漆粗糙度
+    });
+  }
 }
 
 function init() {
