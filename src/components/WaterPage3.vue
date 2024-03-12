@@ -25,28 +25,56 @@
       <ul>
         <li
           @click="
-            showAreaList = !showAreaList;
+            showAreaList = false;
             showColorList = false;
+            showComponentList = !showComponentList;
+            showComponentStyleList = false;
           "
         >
-          <img src="../assets/icon1.png" alt="" />
+          <div class="img-wrap small img1">
+            <img src="../assets/icon0.png" alt="" />
+          </div>
 
           <span>部件</span>
         </li>
+        <li
+          class="small"
+          @click="
+            showAreaList = !showAreaList;
+            showColorList = false;
+            showComponentStyleList = false;
+            showComponentList = false;
+          "
+        >
+          <div class="img-wrap small">
+            <img src="../assets/icon1.png" alt="" />
+          </div>
+
+          <span>颜色</span>
+        </li>
+
         <li @click="changeCamera">
-          <img src="../assets/icon2.png" alt="" />
+          <div class="img-wrap">
+            <img src="../assets/icon2.png" alt="" />
+          </div>
           <span>视图</span>
         </li>
-        <li @click="handleEffect">
-          <img src="../assets/icon3.png" alt="" />
+        <li @click="handleEffect" class="small">
+          <div class="img-wrap small">
+            <img src="../assets/icon3.png" alt="" />
+          </div>
           <span>旋转</span>
         </li>
         <li @click="handleReset">
-          <img src="../assets/icon4.png" alt="" />
+          <div class="img-wrap">
+            <img src="../assets/icon4.png" alt="" />
+          </div>
           <span>重置</span>
         </li>
         <li @click="createImage">
-          <img src="../assets/icon5.png" alt="" />
+          <div class="img-wrap small">
+            <img src="../assets/icon5.png" alt="" />
+          </div>
           <span>分享</span>
         </li>
       </ul>
@@ -82,8 +110,105 @@
         </div>
       </div>
     </div>
-
-    <!-- 选择部位 -->
+    <!-- 选择需要更换的部位 -->
+    <transition>
+      <div class="area-menu area-menu1" v-show="showComponentList">
+        <div>
+          <div class="area-name">部件</div>
+          <div class="color-list" v-if="isMobile == false">
+            <div
+              class="color-item"
+              v-for="(item, index) in componentList"
+              :key="index"
+              @click="() => handleSelectComponent(index)"
+            >
+              <div class="color-info">
+                <div class="color-name">{{ item.areaName }}</div>
+                <div class="text">{{ item.currentApply }}</div>
+              </div>
+            </div>
+          </div>
+          <!-- 选择部位——手机端 -->
+          <div class="color-list" v-else-if="isMobile == true">
+            <div
+              class="color-item"
+              v-for="(item, index) in componentList"
+              :key="index"
+              @click="() => handleSelectComponent(index)"
+            >
+              <div class="color-name font-bg">{{ item.areaName }}</div>
+              <div class="color-info">
+                <!-- <div
+                  class="color"
+                  :style="{ backgroundColor: areaInfo.color }"
+                ></div>-->
+                <div class="text">{{ item.currentApply }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></transition
+    >
+    <!-- 选择零件款式 -->
+    <transition>
+      <div class="area-menu area-menu2" v-show="showComponentStyleList">
+        <!-- <div class="area-menu area-menu2"> -->
+        <div>
+          <div class="sp-relative">
+            <img
+              src="../assets/return1.png"
+              alt=""
+              class="return-btn"
+              v-show="!isMobile"
+              @click="
+                showComponentStyleList = false;
+                showComponentList = !showComponentList;
+              "
+            />
+            <div class="area-name" v-show="!isMobile">
+              {{ componentList[currentComponentIndex].areaName }}
+            </div>
+            <div
+              class="area-name"
+              v-show="isMobile"
+              @click="
+                showComponentStyleList = false;
+                showComponentList = !showComponentList;
+              "
+            >
+              返回
+            </div>
+          </div>
+          <div class="color-list" v-if="isMobile == false">
+            <div
+              class="color-item"
+              v-for="(item, index) in componentList[currentComponentIndex]
+                .components"
+              :key="index"
+              @click="() => switchComponent(index)"
+            >
+              <div class="color-info">
+                <div class="color-name">{{ item.styleName }}</div>
+                <!-- <div class="text">当前应用</div> -->
+              </div>
+            </div>
+          </div>
+          <!-- 选择颜色——手机端 -->
+          <div class="color-list" v-else-if="isMobile == true">
+            <div
+              class="color-item"
+              v-for="(item, index) in componentList[currentComponentIndex]
+                .components"
+              :key="index"
+              @click="() => switchComponent(index)"
+            >
+              <div class="color-name">{{ item.styleName }}</div>
+            </div>
+          </div>
+        </div>
+      </div></transition
+    >
+    <!-- 选择需要更换的颜色部位 -->
     <transition>
       <div class="area-menu area-menu1" v-show="showAreaList">
         <div>
@@ -205,63 +330,76 @@ import "../style/style.css";
 const isMobile = ref(false);
 const isLoading = ref(true);
 const showAreaList = ref(false);
-const showColorList = ref(false);
+const showColorList = ref(false); // 选择颜色
+const showComponentList = ref(false); // 选择需要更换的部件
+const showComponentStyleList = ref(false);
 
 // 当前选择的部件
-const currentArea = ref("水壶盖");
-const currentAreaIndex = ref(null);
-// 部位
+const currentArea = ref(null);
+let currentAreaIndex = 0;
+let currentComponentIndex = 0;
+// 更换颜色的部位
 const areaList = [
   {
     areaName: "上开关", // 开盖按钮
+    modelName: "开盖按钮",
     colorName: "默认颜色",
     color: "#fff",
-    coords: { x: 1100, y: 830, z: -2200 },
     material: null,
+    currentcomponent: "默认款式",
+    components: [],
   },
   {
     areaName: "水壶盖", // 盖子
+    modelName: "盖子",
     colorName: "默认颜色",
     color: "#fff",
-    // coords: { x: 770, y: 1500, z: -390 },
-    coords: { x: 2500, y: 1000, z: 0 },
     material: null,
+    currentcomponent: "默认款式",
+    components: [],
   },
   {
     areaName: "壶体", // 把手内侧 对称_1
     colorName: "默认颜色",
     color: "#fff",
-    coords: { x: 2500, y: 1000, z: 0 },
     material: null,
+    currentcomponent: "默认款式",
+    components: [],
   },
   {
     areaName: "把手", // 把手外侧
     colorName: "默认颜色",
+    modelName: "把手外侧",
     color: "#fff",
-    coords: { x: 1100, y: 830, z: -2200 },
     material: null,
+    currentcomponent: "默认款式",
+    components: [],
   },
   {
     areaName: "按钮", // 电源开盖
+    modelName: "电源开盖",
     colorName: "默认颜色",
     color: "#fff",
-    coords: { x: 1100, y: 830, z: -2200 },
     material: null,
+    currentcomponent: "默认款式",
+    components: [],
   },
   {
     areaName: "底座", // 挤压 克隆  路径_9 路径_6 圆柱体_1
     colorName: "默认颜色",
     color: "#fff",
-    coords: { x: 2500, y: 1000, z: 100 },
     material: null,
+    currentcomponent: "默认款式",
+    components: [],
   },
 
   {
     areaName: "指示灯", // 指示灯
     colorName: "默认颜色",
     color: "#fff",
-    coords: { x: 1100, y: 830, z: -2200 },
     material: null,
+    currentcomponent: "默认款式",
+    components: [],
   },
 ];
 // 颜色
@@ -327,7 +465,19 @@ const colorList = [
     color: "#f7f7f7",
   },
 ];
-
+// 更换零件的选项
+const componentList = [
+  {
+    areaName: "壶盖",
+    currentApply: "默认款式",
+    components: [],
+  },
+  {
+    areaName: "把手",
+    currentApply: "默认款式",
+    components: [],
+  },
+];
 let scene;
 let camera;
 let renderer;
@@ -342,16 +492,26 @@ function switchColor(index, colorInfo) {
   areaList[index].color = colorInfo.color;
   areaList[index].colorName = colorInfo.name;
   areaList[index].material.color.set(colorInfo.color);
+  // showColorList.value = true;
 }
+//
 
 // 选择区域
 function handleSelectArea(info, index) {
   controls.autoRotate = false;
 
   currentArea.value = info;
-  currentAreaIndex.value = index;
+  currentAreaIndex = index;
   showAreaList.value = false;
+  showComponentList.value = false;
+  showComponentStyleList.value = false;
   showColorList.value = true;
+}
+
+function handleSelectComponent(index) {
+  showComponentList.value = false;
+  showComponentStyleList.value = true;
+  currentComponentIndex = index;
 }
 for (let i of areaList) {
   if (i.areaName == "指示灯") {
@@ -367,6 +527,70 @@ for (let i of areaList) {
       clearcoatRoughness: 0.4, // 轻漆粗糙度
     });
   }
+}
+
+let waterModel;
+// 切换零件
+function switchComponent(index) {
+  // 获取壶模型
+  let areaName = componentList[currentComponentIndex].areaName;
+  let components =
+    componentList[currentComponentIndex].components[index].component;
+  let componentToRemove = [];
+  let componentToAdd = [];
+
+  componentList[currentComponentIndex].currentApply =
+    componentList[currentComponentIndex].components[index].styleName;
+
+  if (waterModel.type == "Group") {
+    waterModel.traverse(function (child) {
+      if (areaName == "壶盖" && child.name == "开盖按钮") {
+        for (let item = 0; item < components.length; item++) {
+          if (components[item].name == child.name) {
+            componentToRemove.push(child);
+            componentToAdd.push(components[item].content);
+          }
+        }
+      }
+      if (areaName == "壶盖" && child.name == "盖子") {
+        for (let item = 0; item < components.length; item++) {
+          if (components[item].name == child.name) {
+            componentToRemove.push(child);
+            componentToAdd.push(components[item].content);
+          }
+        }
+      }
+      if (areaName == "把手" && child.name == "把手外侧") {
+        for (let item = 0; item < components.length; item++) {
+          if (components[item].name == child.name) {
+            componentToRemove.push(child);
+            componentToAdd.push(components[item].content);
+          }
+        }
+      }
+      if (areaName == "把手" && child.name == "把手内侧") {
+        for (let item = 0; item < components.length; item++) {
+          if (components[item].name == child.name) {
+            componentToRemove.push(child);
+            componentToAdd.push(components[item].content);
+          }
+        }
+      }
+      if (areaName == "把手" && child.name == "电源开盖") {
+        for (let item = 0; item < components.length; item++) {
+          if (components[item].name == child.name) {
+            componentToRemove.push(child);
+            componentToAdd.push(components[item].content);
+          }
+        }
+      }
+    });
+    componentToRemove.forEach((child) => waterModel.remove(child));
+    componentToAdd.forEach((component) => waterModel.add(component));
+  }
+
+  componentList[currentComponentIndex].currentApply =
+    componentList[currentComponentIndex].components[index].styleName;
 }
 
 function init() {
@@ -457,17 +681,25 @@ function init() {
     const loader = new FBXLoader();
     loader.load(`./model/4.fbx`, function (object) {
       isLoading.value = false;
+      // console.log(object);
       object.position.set(0, -15, 0);
-      scene.add(object);
-
+      waterModel = object;
+      // waterModel.value = object;
+      scene.add(waterModel);
+      let lidStyle = [];
+      let handStyle = [];
       object.traverse(function (child) {
         if (child.isMesh) {
           child.castShadow = true;
 
-          if (child.name == "对称_1" || child.name == "把手内侧") {
+          if (child.name == "对称_1") {
             child.material = areaList[2].material;
+          } else if (child.name == "把手内侧") {
+            child.material = areaList[2].material;
+            handStyle.push({ name: "把手内侧", content: child });
           } else if (child.name == "盖子") {
             child.material = areaList[1].material;
+            lidStyle.push({ name: "盖子", content: child });
           } else if (
             child.name == "挤压" ||
             child.name == "克隆" ||
@@ -477,8 +709,10 @@ function init() {
           ) {
             child.material = areaList[5].material;
           } else if (child.name == "把手外侧") {
+            handStyle.push({ name: "把手外侧", content: child });
             child.material = areaList[3].material;
           } else if (child.name == "电源开盖") {
+            handStyle.push({ name: "电源开盖", content: child });
             child.material = areaList[4].material;
           } else if (child.name == "指示灯") {
             child.material = areaList[6].material;
@@ -486,9 +720,18 @@ function init() {
             child.material = matter;
           } else if (child.name == "开盖按钮") {
             // 上开关
+            lidStyle.push({ name: "开盖按钮", content: child });
             child.material = areaList[0].material;
           }
         }
+      });
+      componentList[0].components.push({
+        styleName: "默认款式",
+        component: [...lidStyle],
+      });
+      componentList[1].components.push({
+        styleName: "默认款式",
+        component: [...handStyle],
       });
     });
     // 管道_2 顶部半圆
@@ -502,6 +745,15 @@ function init() {
     // 对称_1 壶体
     // 把手外侧 把手内侧 把手
 
+    loader.load(`./model/a.fbx`, function (object) {
+      handleLoadComponent(object, "款式A");
+    });
+    loader.load(`./model/b.fbx`, function (object) {
+      handleLoadComponent(object, "款式B");
+    });
+    loader.load(`./model/c.fbx`, function (object) {
+      handleLoadComponent(object, "款式C");
+    });
     // 加入控制器
     controls = new OrbitControls(camera, renderer.domElement);
     controls.update();
@@ -536,6 +788,44 @@ function init() {
   }
 }
 
+function handleLoadComponent(object, styleName) {
+  object.position.set(0, -15, 0);
+  let lidStyle = [];
+  let handStyle = [];
+  object.traverse(function (child) {
+    if (child.isMesh) {
+      if (child.name == "开盖按钮") {
+        child.material = areaList[0].material;
+        child.castShadow = true;
+        lidStyle.push({ name: child.name, content: child });
+      } else if (child.name == "盖子") {
+        child.material = areaList[1].material;
+        child.castShadow = true;
+        lidStyle.push({ name: child.name, content: child });
+      } else if (child.name == "把手外侧") {
+        child.material = areaList[3].material;
+        child.castShadow = true;
+        handStyle.push({ name: child.name, content: child });
+      } else if (child.name == "把手内侧") {
+        child.material = areaList[2].material;
+        child.castShadow = true;
+        handStyle.push({ name: child.name, content: child });
+      } else if (child.name == "电源开盖") {
+        child.material = areaList[4].material;
+        child.castShadow = true;
+        handStyle.push({ name: child.name, content: child });
+      }
+    }
+  });
+  componentList[0].components.push({
+    styleName: styleName,
+    component: [...lidStyle],
+  });
+  componentList[1].components.push({
+    styleName: styleName,
+    component: [...handStyle],
+  });
+}
 function handleEffect() {
   controls.autoRotate = !controls.autoRotate;
 }
@@ -611,7 +901,6 @@ function createImage() {
   const context = canvas.getContext("2d");
   canvas.width = renderer.domElement.width;
   canvas.height = renderer.domElement.height;
-  console.log(canvas.width, canvas.height);
   context.drawImage(renderer.domElement, 0, 0);
   context.drawImage(logo.value, 20, 20, logo.value.width, logo.value.height);
   shareImage.value = canvas.toDataURL("image/png");
@@ -657,7 +946,7 @@ const render = () => {
 };
 
 function showCamera() {
-  console.log("camera.position:", camera.position);
+  // console.log("camera.position:", camera.position);
 }
 </script>
 <style scoped>
@@ -701,23 +990,33 @@ function showCamera() {
   align-items: center;
   cursor: pointer;
 }
-.menu-part li img {
+.menu-part li .img-wrap {
   width: 1rem;
   height: 1rem;
-  margin-bottom: 0.1rem;
-  vertical-align: top;
   background: rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  padding: 8px;
+  margin-bottom: 0.1rem;
+  vertical-align: top;
   box-sizing: border-box;
+  padding: 0.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.menu-part li img {
+  width: 100%;
+  /* height: 100%; */
 }
 .menu-part li span {
   font-size: 16px;
   color: #000;
 }
 
-.menu-part li:nth-child(3) img {
-  padding: 12px;
+.menu-part .small.img-wrap {
+  padding: 0.2rem;
+}
+.menu-part .small.img-wrap.img1 {
+  padding-left: 0.25rem;
 }
 /* 区域颜色选项 */
 .area-menu {
@@ -949,6 +1248,10 @@ function showCamera() {
     letter-spacing: 2px;
     font-size: 0.35rem;
     flex-shrink: 0;
+    width: 30px;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
   }
   .color-list {
     width: 100%;
@@ -1013,12 +1316,6 @@ function showCamera() {
   }
   .menu-part li span {
     font-size: 0.4rem;
-  }
-  .menu-part li img {
-    padding: 3px;
-  }
-  .menu-part li:nth-child(3) img {
-    padding: 5px;
   }
 }
 </style>

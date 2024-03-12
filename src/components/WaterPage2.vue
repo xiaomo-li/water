@@ -162,7 +162,6 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import * as TWEEN from "@tweenjs/tween.js";
 import "../style/style.css";
 
-compose(result);
 const isMobile = ref(false);
 const isLoading = ref(true);
 const showAreaList = ref(false);
