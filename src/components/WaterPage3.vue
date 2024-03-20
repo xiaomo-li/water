@@ -90,7 +90,7 @@
           @click="shareImage = null"
         />
 
-        <div class="share-header">分享图片</div>
+        <div class="share-header">你的作品太棒了！</div>
         <div class="share-body">
           <img class="logo logo2" src="../assets/logo.png" alt="" />
           <a :href="shareImage" download="kettle.png">
@@ -101,7 +101,22 @@
               crossorigin="anonymous"
             />
           </a>
+          <div class="share_info_wrap">
+            <div class="qrcode_wrap">
+              <img src="../assets/qrcode.png" alt="" class="qr_code" />
+              <p>扫码分享</p>
+            </div>
+            <div class="share_info">
+              <p>
+                赶紧联系你的客户经理<br />
+                完成样品定制吧！
+              </p>
+              <p>联系人：张三</p>
+              <p>联系电话：12211222211</p>
+            </div>
+          </div>
         </div>
+
         <div class="share-footer">
           <img src="../assets/qq.png" alt="" />
           <img src="../assets/wechat.png" alt="" />
@@ -324,6 +339,9 @@ import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 // import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 // import * as TWEEN from "@tweenjs/tween.js";
 import "../style/style.css";
 
@@ -341,13 +359,11 @@ let currentComponentIndex = 0;
 // 更换颜色的部位
 const areaList = [
   {
-    areaName: "上开关", // 开盖按钮
+    areaName: "壶盖扣", // 开盖按钮
     modelName: "开盖按钮",
     colorName: "默认颜色",
     color: "#fff",
     material: null,
-    currentcomponent: "默认款式",
-    components: [],
   },
   {
     areaName: "水壶盖", // 盖子
@@ -355,16 +371,12 @@ const areaList = [
     colorName: "默认颜色",
     color: "#fff",
     material: null,
-    currentcomponent: "默认款式",
-    components: [],
   },
   {
     areaName: "壶体", // 把手内侧 对称_1
     colorName: "默认颜色",
     color: "#fff",
     material: null,
-    currentcomponent: "默认款式",
-    components: [],
   },
   {
     areaName: "把手", // 把手外侧
@@ -372,8 +384,6 @@ const areaList = [
     modelName: "把手外侧",
     color: "#fff",
     material: null,
-    currentcomponent: "默认款式",
-    components: [],
   },
   {
     areaName: "按钮", // 电源开盖
@@ -381,16 +391,12 @@ const areaList = [
     colorName: "默认颜色",
     color: "#fff",
     material: null,
-    currentcomponent: "默认款式",
-    components: [],
   },
   {
     areaName: "底座", // 挤压 克隆  路径_9 路径_6 圆柱体_1
     colorName: "默认颜色",
     color: "#fff",
     material: null,
-    currentcomponent: "默认款式",
-    components: [],
   },
 
   {
@@ -398,8 +404,6 @@ const areaList = [
     colorName: "默认颜色",
     color: "#fff",
     material: null,
-    currentcomponent: "默认款式",
-    components: [],
   },
 ];
 // 颜色
@@ -468,7 +472,7 @@ const colorList = [
 // 更换零件的选项
 const componentList = [
   {
-    areaName: "壶盖",
+    areaName: "壶盖扣",
     currentApply: "默认款式",
     components: [],
   },
@@ -487,11 +491,16 @@ let controls;
 const controlsRef = ref(null);
 // let tween;
 let plane;
+let effectComposer;
 // 切换颜色
 function switchColor(index, colorInfo) {
   areaList[index].color = colorInfo.color;
   areaList[index].colorName = colorInfo.name;
   areaList[index].material.color.set(colorInfo.color);
+  if (index == 6) {
+    areaList[index].material.emissive.set(colorInfo.color);
+  }
+
   // showColorList.value = true;
 }
 //
@@ -515,8 +524,10 @@ function handleSelectComponent(index) {
 }
 for (let i of areaList) {
   if (i.areaName == "指示灯") {
-    i.material = new THREE.MeshBasicMaterial({
+    i.material = new THREE.MeshLambertMaterial({
       color: 0xffffff,
+      emissive: 0xffffff,
+      emissiveIntensity: 5,
     });
   } else {
     i.material = new THREE.MeshPhysicalMaterial({
@@ -544,7 +555,7 @@ function switchComponent(index) {
 
   if (waterModel.type == "Group") {
     waterModel.traverse(function (child) {
-      if (areaName == "壶盖" && child.name == "开盖按钮") {
+      if (areaName == "壶盖扣" && child.name == "开盖按钮") {
         for (let item = 0; item < components.length; item++) {
           if (components[item].name == child.name) {
             componentToRemove.push(child);
@@ -552,7 +563,7 @@ function switchComponent(index) {
           }
         }
       }
-      if (areaName == "壶盖" && child.name == "盖子") {
+      if (areaName == "壶盖扣" && child.name == "盖子") {
         for (let item = 0; item < components.length; item++) {
           if (components[item].name == child.name) {
             componentToRemove.push(child);
@@ -601,7 +612,7 @@ function init() {
       45,
       window.innerWidth / window.innerHeight,
       1,
-      1200
+      400
     );
     camera.position.set(250, 100, 10);
 
@@ -610,17 +621,18 @@ function init() {
       preserveDrawingBuffer: true, // 生成图片必备项
       logarithmicDepthBuffer: true, // 抗锯齿
     });
-
+    // renderer.toneMapping = "AgX";
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap; // 默认的阴影类型
     // renderer.setClearColor("#ffffff");
+    renderer.toneMapping = THREE.ReinhardToneMapping;
     renderer.setSize(window.innerWidth, window.innerHeight);
     waterRef.value.append(renderer.domElement);
 
     // 创建灯光
     // 环境光
-    const ambientLight = new THREE.AmbientLight(0xffffff, 2);
+    const ambientLight = new THREE.AmbientLight(0xffffff);
     scene.add(ambientLight);
 
     const light1 = new THREE.DirectionalLight(0xffffff, 0.7);
@@ -630,7 +642,7 @@ function init() {
     // light2.position.set(0, 0, -100); // 壶把
     // scene.add(light2);
 
-    const light3 = new THREE.DirectionalLight(0xffffff, 0.9);
+    const light3 = new THREE.DirectionalLight(0xffffff, 0.5);
     light3.position.set(-20, 0, 4); // 背面
     scene.add(light3);
 
@@ -638,19 +650,19 @@ function init() {
     light5.position.set(0, 100, 0); // 顶光
     scene.add(light5);
 
-    const light6 = new THREE.DirectionalLight(0xffffff, 1);
-    light6.position.set(1000, 100, 1000); // 壶嘴
-    scene.add(light6);
-    // const light7 = new THREE.DirectionalLight(0xffffff, 1);
-    // light7.position.set(-1000, -100, -1000); // 壶把
-    // scene.add(light7);
+    // const light6 = new THREE.DirectionalLight(0xffffff, 1);
+    // light6.position.set(1000, 100, 1000); // 壶嘴
+    // scene.add(light6);
+    // // const light7 = new THREE.DirectionalLight(0xffffff, 1);
+    // // light7.position.set(-1000, -100, -1000); // 壶把
+    // // scene.add(light7);
     const light8 = new THREE.DirectionalLight(0xffffff, 1);
-    light8.position.set(-500, 0, 0); // 背面+ 底部
+    light8.position.set(-50, 0, 0); // 背面+ 底部
     scene.add(light8);
-    // const light9 = new THREE.DirectionalLight(0xffffff, 1);
-    // light9.position.set(500, 200, 0); // 正面+顶部
-    // scene.add(light9);
-    const light4 = new THREE.DirectionalLight(0xffffff, 2.9);
+    const light9 = new THREE.DirectionalLight(0xffffff, 0.5);
+    light9.position.set(50, 20, 0); // 正面+顶部
+    scene.add(light9);
+    const light4 = new THREE.DirectionalLight(0xffffff, 1);
     // light4.position.set(-200, 200, 40); // 正面
     light4.position.set(20, 40, 4);
     scene.add(light4);
@@ -667,9 +679,11 @@ function init() {
 
     let planeGeometry, planeMaterial;
 
-    planeGeometry = new THREE.PlaneGeometry(500, 500); // 骨架
+    planeGeometry = new THREE.PlaneGeometry(1000, 1000); // 骨架
     planeMaterial = new THREE.MeshPhongMaterial({
       color: 0xffffff,
+      // opacity: 0.9,
+      // transparent: true,
     });
     plane = new THREE.Mesh(planeGeometry, planeMaterial); // 网格
     plane.position.set(0, -15, 0);
@@ -681,10 +695,8 @@ function init() {
     const loader = new FBXLoader();
     loader.load(`./model/4.fbx`, function (object) {
       isLoading.value = false;
-      // console.log(object);
       object.position.set(0, -15, 0);
       waterModel = object;
-      // waterModel.value = object;
       scene.add(waterModel);
       let lidStyle = [];
       let handStyle = [];
@@ -695,7 +707,7 @@ function init() {
           if (child.name == "对称_1") {
             child.material = areaList[2].material;
           } else if (child.name == "把手内侧") {
-            child.material = areaList[2].material;
+            child.material = areaList[3].material;
             handStyle.push({ name: "把手内侧", content: child });
           } else if (child.name == "盖子") {
             child.material = areaList[1].material;
@@ -719,7 +731,7 @@ function init() {
           } else if (child.name == "布尔" || child.name == "不锈钢金属") {
             child.material = matter;
           } else if (child.name == "开盖按钮") {
-            // 上开关
+            // 壶盖扣
             lidStyle.push({ name: "开盖按钮", content: child });
             child.material = areaList[0].material;
           }
@@ -774,16 +786,40 @@ function init() {
     // gui.add(matter, "roughness", 0, 1);
     // gui.add(matter, "clearcoat", 0, 2);
     // gui.add(matter, "clearcoatRoughness", 0.2, 0.8);
+    // gui.add(areaList[6].material, "emissive", "");
 
-    new RGBELoader().load("./model/room3.hdr", function (texture) {
+    // gui.add(areaList[6].material, "emissiveIntensity", 0, 20);
+    // // gui.add(areaList[6].material, "metalness", 0.5, 2);
+
+    effectComposer = new EffectComposer(renderer);
+    const renderPass = new RenderPass(scene, camera);
+    effectComposer.addPass(renderPass);
+
+    const bloom = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      0.12,
+      0.1,
+      0.1
+    );
+    effectComposer.addPass(bloom);
+
+    new RGBELoader().load("./model/room2.hdr", function (texture) {
       const pmremGenerator = new THREE.PMREMGenerator(renderer);
       pmremGenerator.compileEquirectangularShader();
       const envMap = pmremGenerator.fromEquirectangular(texture).texture;
       scene.environment = envMap;
       texture.dispose();
       pmremGenerator.dispose();
+
+      texture.mapping = THREE.EquirectangularReflectionMapping;
+      scene.background = texture;
+      // scene.environment = texture;
+      scene.backgroundBlurriness = 1;
+      // scene.fog = new THREE.Fog(0xb5b5b5, 100);
+      // scene.backgroundIntensity = 0.5;
     });
 
+    // bloom.enabled = false;
     render();
   }
 }
@@ -807,7 +843,7 @@ function handleLoadComponent(object, styleName) {
         child.castShadow = true;
         handStyle.push({ name: child.name, content: child });
       } else if (child.name == "把手内侧") {
-        child.material = areaList[2].material;
+        child.material = areaList[3].material;
         child.castShadow = true;
         handStyle.push({ name: child.name, content: child });
       } else if (child.name == "电源开盖") {
@@ -858,14 +894,9 @@ let cameraList = [
   },
 ];
 let currentCameraIndex = 0;
-// function tweenEnd() {
-//   if (tween && tween.end) {
-//     tween.end();
-//   }
-// }
+
 function changeCamera() {
   controls.autoRotate = false;
-  // tweenEnd();
 
   let coords = cameraList[currentCameraIndex];
 
@@ -881,8 +912,6 @@ function changeCamera() {
 }
 // 重置
 function handleReset() {
-  // tweenEnd();
-
   for (let i of areaList) {
     i.colorName = "默认颜色";
     i.color = "#fff";
@@ -922,15 +951,36 @@ const onResize = () => {
     renderer.setPixelRatio(window.devicePixelRatio);
   }
 };
+let timer = ref(null);
 onMounted(() => {
   isMobile.value = window.innerWidth < 780 ? true : false;
-
   init();
+  // 部件样式排序
+  timer.value = setTimeout(function () {
+    componentList[0].components.sort((style1, style2) => {
+      if (style1.styleName < style2.styleName) {
+        return -1;
+      } else if (style1.styleName > style2.styleName) {
+        return 1;
+      }
+      return 0;
+    });
+    componentList[1].components.sort((style1, style2) => {
+      if (style1.styleName < style2.styleName) {
+        return -1;
+      } else if (style1.styleName > style2.styleName) {
+        return 1;
+      }
+      return 0;
+    });
+  }, 2000);
+
   window.addEventListener("resize", onResize);
 });
 onUnmounted(() => {
   frameId && window.cancelAnimationFrame(frameId);
   window.removeEventListener("resize", onResize);
+  clearTimeout(timer.value);
 });
 
 watchEffect(() => {
@@ -942,7 +992,11 @@ const render = () => {
   }
   frameId = window.requestAnimationFrame(render);
   // TWEEN.update();
-  renderer.render(scene, camera);
+  // renderer.render(scene, camera);
+  // composer.render();
+  if (camera.visible) {
+    effectComposer.render();
+  }
 };
 
 function showCamera() {
@@ -1171,6 +1225,7 @@ function showCamera() {
   position: relative;
   display: flex;
   justify-content: center;
+  background: #cecece;
 }
 
 .share-img {
@@ -1178,7 +1233,7 @@ function showCamera() {
   height: 100%;
   margin: auto;
   display: block;
-  transform: scale(1.1);
+  transform: scale(1.4) translateY(-14%);
 }
 .share-footer {
   widows: 100%;
@@ -1199,6 +1254,36 @@ function showCamera() {
   transform: translate(0.33333333rem, -0.33333333rem);
   cursor: pointer;
 }
+
+.share-body .share_info_wrap {
+  position: absolute;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #000;
+  font-size: 16px;
+  line-height: 1.5;
+  bottom: 0px;
+  left: 0%;
+
+  width: 100%;
+  background: #fff;
+  padding: 5%;
+  box-sizing: border-box;
+}
+.share-body .qrcode_wrap {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.share-body .qrcode_wrap img {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
+  margin-bottom: 2px;
+}
+
 .logo {
   position: absolute;
   top: 0.5rem;
@@ -1218,6 +1303,7 @@ function showCamera() {
   transform: translateY(-50%);
   cursor: pointer;
 }
+
 @media screen and (max-width: 780px) {
   .logo {
     width: 30vw;
@@ -1316,6 +1402,19 @@ function showCamera() {
   }
   .menu-part li span {
     font-size: 0.4rem;
+  }
+  .share-body .share_info_wrap {
+    font-size: 14px;
+    padding: 0 5%;
+  }
+  .share-body .qrcode_wrap img {
+    width: 1.3rem;
+    height: 1.3rem;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .share-img {
+    transform: scale(1.5) translateY(-10%);
   }
 }
 </style>
